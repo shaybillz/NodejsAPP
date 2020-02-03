@@ -1,0 +1,44 @@
+pipeline {
+   agent any
+
+   stages {
+      stage('checkout') {
+         steps {
+            // Get some code from a GitHub repository
+            git 'https://github.com/shaybillz/NodejsAPP.git'
+
+            sh "npm -v"
+            
+            sh "nodejs -v"
+         }
+      }
+        stage('Build') {
+            steps {
+                sh "docker --version"
+                
+                withCredentials([[$class: 'AmazonWebServicesCredentialsBinding',
+                    accessKeyVariable: 'AWS_ACCESS_KEY_ID',
+                    credentialsId: 'MY-AWS',
+                    secretKeyVariable: 'AWS_SECRET_ACCESS_KEY']]
+                ){
+                    echo 'Logging into ECR...'
+                    sh "\$(aws ecr get-login --no-include-email --region us-east-1)"
+                    
+                    sh "docker build -t shaynodejsapp/nodejs-demo-image ."
+                    
+                    echo 'Tagging docker container...'
+                    
+                    sh "docker tag shaynodejsapp/nodejs-demo-image:latest 558908427467.dkr.ecr.us-east-1.amazonaws.com/shaynodejsapp:dev"
+                    
+                    echo 'Pushing docker container to ECR...'
+                    
+                    sh "docker push 558908427467.dkr.ecr.us-east-1.amazonaws.com/shaynodejsapp:dev"
+                    
+                    
+            }
+            
+        }
+
+      }
+   }
+}

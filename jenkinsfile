@@ -34,6 +34,8 @@ pipeline {
                     
                     sh "docker push 558908427467.dkr.ecr.us-east-1.amazonaws.com/shaynodejsapp:dev"
                     
+                    sh "aws ecs update-service --service ShayApp-service --cluster default --region us-east-1 --force-new-deployment"
+                    
                     
             }
             
